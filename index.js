@@ -1,35 +1,69 @@
 const fs = require( 'fs' );
 const path = require( 'path' );
-const getJavaVersion = require( './getJavaVersion.js' );
+const getVersions = require( './getVersions.js' );
+const compareVersions = require( './compareVersions.js' );
+const getNodeJavaPath = require( './getNodeJavaPath.js' );
+const getJavaLibPath = require( './getJavaLibPath.js' );
 
-function verifyNodeVersion( versions ) {
-	if ( versions.node.arch !== process.arch ) {
-		throw new Error( 'Invalid Node.js architecture: Installed: ' + process.arch + ', expected: ' + versions.node.arch );
-	}
-	if ( versions.node.abi !== process.versions.modules ) {
-		throw new Error( 'Invalid Node.js version: ABI version is ' + process.versions.modules + ', expected ' + versions.node.abi + '. Try using Node.js ' + versions.node.version );
-	}
+function copyFile(source, target) {
+	var rd = fs.createReadStream(source);
+	var wr = fs.createWriteStream(target);
+	return new Promise(function(resolve, reject) {
+		rd.on('error', reject);
+		wr.on('error', reject);
+		wr.on('finish', resolve);
+		rd.pipe(wr);
+	}).catch(function(error) {
+		rd.destroy();
+		wr.end();
+		throw error;
+	});
 }
 
-function verifyJavaVersion( versions ) {
-	return getJavaVersion()
-	.then( javaVersion => {
-		if ( versions.java.arch !== javaVersion.arch ) {
-			throw new Error( 'Invalid JRE architecture: Installed: ' + javaVersion.arch + ', expected: ' + versions.java.arch );
-		}
-		if ( versions.java.version !== javaVersion.version ) {
-			throw new Error( 'Invalid JRE version: Installed: ' + javaVersion.version + ', expected: ' + versions.java.version );
-		}
-	} );
+function getPrebuiltFilename( versions ) {
+	return `prebuilt-${versions.node.abi}-${versions.java.minor}-${versions.nodeJava.version}.node`;
+}
+
+function replacePrebuiltBinary( currentVersions, prebuiltPath ) {
+	const nodeJavaPath = getNodeJavaPath();
+	const dest = path.join( nodeJavaPath, 'build', 'Release', 'nodejavabridge_bindings.node' );
+	return copyFile( prebuiltPath, dest )
+	.then( () => {
+		// update versions.json with installed version
+		return new Promise( ( resolve, reject ) => {
+			fs.writeFile( versionsJsonPath, JSON.stringify( currentVersions, null, 2 ), 'utf8', ( err ) => { err ? reject( err ) : resolve(); } );
+		} );
+	} );	
 }
 
 function start( options = {} ) {
-	const versions = JSON.parse( fs.readFileSync( path.join( __dirname, 'versions.json' ), 'utf8' ) );
-	return Promise.resolve()
-	.then( () => verifyNodeVersion( versions ) )
-	.then( () => verifyJavaVersion( versions ) )
+	let javaDir;
+	const versionsJsonPath = path.join( __dirname, 'versions.json' );
+	const savedVersions = JSON.parse( fs.readFileSync( versionsJsonPath, 'utf8' ) );
+	return getVersions()
+	.then( currentVersions => {
+		javaDir = currentVersions.java.dir;
+		const rejectionReasons = [];
+		if ( !compareVersions( currentVersions, savedVersions, rejectionReasons ) ) {
+			// installed version is not compatible with system - see if we have a version we can copy over installed version that will work
+			const prebuiltFilename = getPrebuiltFilename( currentVersions );
+			const prebuiltPath = path.join( __dirname, 'prebuilt', prebuiltFilename );
+			if ( fs.existsSync( prebuiltPath ) ) {
+				return replacePrebuiltBinary( currentVersions, prebuiltPath );
+			} else {
+				throw new Error( rejectionReasons.join( "\r\n" ) );
+			}
+		}
+	} )
 	.then( () => {
-		//return {};
+		// update JVM path stored in node-java package
+		const libPath = getJavaLibPath( javaDir );
+		const nodeJavaPath = getNodeJavaPath();
+		return new Promise( ( resolve, reject ) => {
+			fs.writeFile( path.join( nodeJavaPath, 'build', 'jvm_dll_path.json' ), JSON.stringify( path.delimiter + libPath ), 'utf8', ( err ) => { err ? reject( err ) : resolve(); } );
+		} );
+	} )
+	.then( () => {
 		return require( 'java' );
 	} );
 }
