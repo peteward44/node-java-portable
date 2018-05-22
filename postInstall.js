@@ -1,6 +1,6 @@
 const path = require( 'path' );
 const fs = require( 'fs' );
-const getVersions = require( './getVersions.js' );
+const getVersions = require( './lib/getVersions.js' );
 
 function handleError( err ) {
 	console.error( err );
