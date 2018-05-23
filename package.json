@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/peteward44/node-java-portable#readme",
   "peerDependencies": {
-    "java": "^0.9.1"
+    "java": "*"
   },
   "devDependencies": {
     "chai": "^4.1.2",
