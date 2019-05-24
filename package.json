@@ -1,6 +1,6 @@
 {
   "name": "java-portable",
-  "version": "1.4.0-snapshot.0",
+  "version": "2.0.0-snapshot.0",
   "description": "Wrapper for the node-java npm package that improves locating the JRE on the target machine and can support multiple prebuilt platform builds",
   "main": "index.js",
   "scripts": {
