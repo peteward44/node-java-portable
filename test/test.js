@@ -1,14 +1,9 @@
-const fs = require( 'fs' );
-const os = require( 'os' );
+/* eslint-disable no-console */
 const path = require( 'path' );
-const postInstall = require( '../lib/postInstall.js' );
 const javaPortable = require( '..' );
-const chai = require( 'chai' );
 
 const testRootDir = path.join( __dirname, '..', '_test' );
-const versionsJsonPath = path.join( __dirname, '..', 'versions.json' );
 const testVersionsJsonPath = path.join( testRootDir, '_versions.json' );
-
 const testNodeJavaPath = path.join( testRootDir, '_node-java' );
 
 const testOptions = {
@@ -51,8 +46,20 @@ describe( 'node-java-portable', () => {
 			// chai.assert( !!java ); // chai.expect( java ).is( 'object' ) doesn't work
 		// } );
 	// } );
+
+	it( 'getJavaVersions', () => {
+	//	process.env.JAVA_HOME = 'C:\\Program Files\\Java\\jdk1.7.0_131';
+		return javaPortable.getJavaVersions( testOptions )
+		.then( versions => {
+			console.log( JSON.stringify( versions, null, 2 ) );
+		} );
+	} ).timeout( 2 * 60 * 1000 );
+
 	it( 'prepare', () => {
-		process.env.JAVA_HOME = 'C:\\Program Files\\Java\\jdk1.8.0_131';
-		return javaPortable.prepare( testOptions );
+		process.env.JAVA_HOME = 'C:\\Program Files\\Java\\jdk1.7.0_131';
+		return javaPortable.prepare( testOptions )
+		.then( version => {
+			console.log( JSON.stringify( version, null, 2 ) );
+		} );
 	} ).timeout( 2 * 60 * 1000 );
 } );

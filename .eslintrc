@@ -1,0 +1,16 @@
+{
+    "extends": [
+        "eslint:recommended"
+    ],
+    "rules": {
+		"no-empty": 0
+    },
+	"globals": {
+		"global": false
+	},
+	"env": {
+		"es6": true,
+		"node": true,
+		"mocha": true
+	}
+}

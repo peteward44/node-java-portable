@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha",
-    "postinstall": "node postInstall.js"
+    "postinstall": "node postInstall.js",
+	"lint": "eslint lib test",
+	"lintfix": "eslint --fix lib test"
   },
   "repository": {
     "type": "git",
@@ -28,6 +30,7 @@
   },
   "devDependencies": {
     "chai": "^4.1.2",
+    "eslint": "^5.16.0",
     "mocha": "^5.1.1"
   },
   "dependencies": {
