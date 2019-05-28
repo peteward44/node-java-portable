@@ -1,5 +1,11 @@
 {
   "name": "java-portable",
-  "version": "2.3.0-snapshot.0",
-  "dependencies": {}
+  "version": "2.2.0",
+  "dependencies": {},
+  "tag": {
+    "commit": "b1e77611b8e7ec5ccc1a6365a6d7ded69f273416",
+    "target": {
+      "branch": "master"
+    }
+  }
 }
