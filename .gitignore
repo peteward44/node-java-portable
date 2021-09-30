@@ -59,3 +59,4 @@ typings/
 
 /versions.json
 /_test
+/package-lock.json
